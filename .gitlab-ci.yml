@@ -1,0 +1,16 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  variables:
+    user: flab
+    working_directory: /home/$user/mysql_replication
+  script:
+    - chmod og= $SSH_PRIVATE_KEY
+    - apt-get update && apt-get install -y openssh-client
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - scp -i $SSH_PRIVATE_KEY -r docker-compose.yml $user@10.14.0.57:$working_directory/docker-compose.yml
+    - ssh -i $SSH_PRIVATE_KEY $user@10.14.0.57 "cd $working_directory && docker-compose up -d"
