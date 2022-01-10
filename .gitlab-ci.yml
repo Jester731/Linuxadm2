@@ -5,7 +5,7 @@ deploy:
   stage: deploy
   variables:
     user: flab
-    working_directory: /home/$user/mysql_replication
+    working_directory: /home/$user/redis_replication
   script:
     - chmod og= $SSH_PRIVATE_KEY
     - apt-get update && apt-get install -y openssh-client

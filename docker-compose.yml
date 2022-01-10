@@ -1,48 +1,31 @@
-version: '2.1'
+version: '2'
 
 services:
-  mysql-master:
-    image: docker.io/bitnami/mysql:8.0
+  redis-primary:
+    image: docker.io/bitnami/redis:6.2
     ports:
-      - '3306:3306'
+      - '6379:6379'
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=my_password
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     volumes:
-      - 'mysql_master_data:/bitnami/mysql/data'
-    environment:
-      - MYSQL_REPLICATION_MODE=master
-      - MYSQL_REPLICATION_USER=replication
-      - MYSQL_USER=pleshkov
-      - MYSQL_DATABASE=linux_adm
-      - MYSQL_PASSWORD=my_password
-      - MYSQL_ROOT_PASSWORD=my_root_password
-      - MYSQL_REPLICATION_PASSWORD=my_replication_password
-    healthcheck:
-      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
-      interval: 15s
-      timeout: 5s
-      retries: 6
+      - 'redis_data:/bitnami/redis/data'
 
-  mysql-slave:
-    image: docker.io/bitnami/mysql:8.0
+  redis-secondary:
+    image: docker.io/bitnami/redis:6.2
     ports:
-      - '3307:3306'
+      - '6380:6379'
     depends_on:
-      - mysql-master
+      - redis-primary
     environment:
-      - MYSQL_REPLICATION_MODE=slave
-      - MYSQL_REPLICATION_USER=replication
-      - MYSQL_USER=pleshkov
-      - MYSQL_DATABASE=linux_adm
-      - MYSQL_PASSWORD=my_password
-      - MYSQL_MASTER_HOST=mysql-master
-      - MYSQL_MASTER_PORT_NUMBER=3306
-      - MYSQL_MASTER_ROOT_PASSWORD=my_root_password
-      - MYSQL_REPLICATION_PASSWORD=my_replication_password
-    healthcheck:
-      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
-      interval: 15s
-      timeout: 5s
-      retries: 6
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-primary
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=my_password
+      - REDIS_PASSWORD=my_password
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
 
 volumes:
-  mysql_master_data:
+  redis_data:
     driver: local
